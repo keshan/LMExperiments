@@ -1,0 +1,84 @@
+{
+  "baseline_hf_dynamic_cache_b1_tok_s": 3.17,
+  "prefix_exact_match": true,
+  "ref_preview": "Here's how to solve the problem step-by-step:\n\n1. **Calculate the total number of eggs laid:**\n   Janet's ducks",
+  "static_engine_preview": "Here's how to solve the problem step-by-step:\n\n1. **Calculate the total number of eggs laid:**\n   Janet's ducks lay 16 eggs per day.\n\n2. **Calculate the total number of eggs she uses:**\n   * Eggs for breakfast: 3\n   * Eggs for muffins: 4\n   * Total eggs used: $3 + 4 = 7$ eggs\n\n3. **Calculate the num",
+  "b1_cold": {
+    "token_counts": [
+      96
+    ],
+    "total_generated_tokens": 96,
+    "steps_executed": 96,
+    "batch_size": 1,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 26.5141,
+    "effective_tok_per_sec": 3.62,
+    "raw_step_tok_per_sec": 3.62
+  },
+  "b1_warm": {
+    "token_counts": [
+      96
+    ],
+    "total_generated_tokens": 96,
+    "steps_executed": 96,
+    "batch_size": 1,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 17.6603,
+    "effective_tok_per_sec": 5.44,
+    "raw_step_tok_per_sec": 5.44
+  },
+  "b16_cold": {
+    "token_counts": [
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128
+    ],
+    "total_generated_tokens": 2048,
+    "steps_executed": 128,
+    "batch_size": 16,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 48.5466,
+    "effective_tok_per_sec": 42.19,
+    "raw_step_tok_per_sec": 42.19
+  },
+  "b16_warm": {
+    "token_counts": [
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128
+    ],
+    "total_generated_tokens": 2048,
+    "steps_executed": 128,
+    "batch_size": 16,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 25.8286,
+    "effective_tok_per_sec": 79.29,
+    "raw_step_tok_per_sec": 79.29
+  }
+}

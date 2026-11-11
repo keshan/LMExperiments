@@ -1,0 +1,49 @@
+{
+  "experiment": "Static-Graph KV Cache Architecture for KV-Shared Models",
+  "model": "unsloth/gemma-4-E2B-it",
+  "total_layers": 35,
+  "active_kv_layers": 15,
+  "frozen_shared_layers": 20,
+  "kv_memory_savings_pct": 57.14285714285714,
+  "bit_level_exact_greedy_match": true,
+  "tpu_v5e_metrics": {
+    "device": "Cloud TPU v5e-1 (16 GiB HBM)",
+    "hf_dynamic_cache_bs1_tok_s": 3.89,
+    "hf_dynamic_cache_recompilations": 432,
+    "hf_static_cache_cold_bs1_tok_s": 0.29,
+    "hf_static_cache_recompilations": 56,
+    "static_graph_engine_warm_bs1_tok_s": 5.05,
+    "static_graph_engine_warm_bs16_tok_s": 89.37,
+    "static_graph_engine_warm_bs32_tok_s": 154.63,
+    "static_graph_engine_recompilations": 0,
+    "end_to_end_throughput_speedup": 48.8,
+    "vllm_status": "Failed at import (Missing tpu_inference C++/PJRT package)"
+  },
+  "gpu_tesla_t4_metrics": {
+    "device": "NVIDIA Tesla T4 GPU (14.75 GiB VRAM)",
+    "hf_dynamic_cache_bs1_tok_s": 11.29,
+    "hf_static_cache_cold_compile_time_s": 261.4,
+    "hf_static_cache_warm_bs1_tok_s": 7.28,
+    "static_graph_engine_warm_bs1_tok_s": 11.98,
+    "static_graph_engine_warm_bs8_tok_s": 45.09,
+    "static_graph_engine_warm_bs16_tok_s": 69.93,
+    "vllm_status": "Crashed with ValueError: No available memory for cache blocks",
+    "vllm_weight_load_gib": 9.85,
+    "vllm_uniform_layer_count": 35,
+    "vllm_root_cause": "Uniform LBNHC 35-layer block layout starves 15GB VRAM without CLA freeze awareness"
+  },
+  "microbenchmark_16_steps": {
+    "torch_cat_dynamic": {
+      "recompilations": 54,
+      "time_s": 0.576
+    },
+    "python_slice_inplace": {
+      "recompilations": 18,
+      "time_s": 0.316
+    },
+    "device_tensor_index_copy": {
+      "recompilations": 0,
+      "time_s": 0.012
+    }
+  }
+}

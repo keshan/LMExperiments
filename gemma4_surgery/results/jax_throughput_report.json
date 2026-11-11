@@ -1,0 +1,257 @@
+{
+  "hbm_weights_gb": 8.641,
+  "pt_ref_32_text": "Here's how to solve the problem step-by-step:\n\n1. **Calculate the total number of eggs laid:**\n   Janet's ducks",
+  "jax_b1_text": "Here's how to solve the problem step-by-step:\n\n1. **Calculate the total number of eggs laid:**\n   Janet's ducks lay 16 eggs per day.\n\n2. **Calculate the total number of eggs she uses:**\n   * Eggs for breakfast: 3\n   * Eggs for muffins: 4\n   * Total eggs used: $3 + 4 = 7$ eggs\n\n3. **Calculate the number of remaining",
+  "exact_match_pt_prefix": true,
+  "exact_match_step_vs_scan": true,
+  "b1_step_cold": {
+    "steps_executed": 97,
+    "batch_size": 1,
+    "elapsed_sec": 9.0905,
+    "raw_step_tok_per_sec": 10.67
+  },
+  "b1_step_warm": {
+    "steps_executed": 97,
+    "batch_size": 1,
+    "elapsed_sec": 1.3608,
+    "raw_step_tok_per_sec": 71.28
+  },
+  "b1_scan_cold": {
+    "token_counts": [
+      97
+    ],
+    "total_generated_tokens": 97,
+    "steps_executed": 97,
+    "batch_size": 1,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 9.0683,
+    "effective_tok_per_sec": 10.7,
+    "raw_step_tok_per_sec": 10.7
+  },
+  "b1_scan_warm": {
+    "token_counts": [
+      97
+    ],
+    "total_generated_tokens": 97,
+    "steps_executed": 97,
+    "batch_size": 1,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 1.36,
+    "effective_tok_per_sec": 71.32,
+    "raw_step_tok_per_sec": 71.32
+  },
+  "b8_scan_cold": {
+    "token_counts": [
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129
+    ],
+    "total_generated_tokens": 1032,
+    "steps_executed": 129,
+    "batch_size": 8,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 18.6614,
+    "effective_tok_per_sec": 55.3,
+    "raw_step_tok_per_sec": 55.3
+  },
+  "b8_scan_warm": {
+    "token_counts": [
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129
+    ],
+    "total_generated_tokens": 1032,
+    "steps_executed": 129,
+    "batch_size": 8,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 1.9077,
+    "effective_tok_per_sec": 540.97,
+    "raw_step_tok_per_sec": 540.97
+  },
+  "b8_step_cold": {
+    "steps_executed": 129,
+    "batch_size": 8,
+    "elapsed_sec": 18.0214,
+    "raw_step_tok_per_sec": 57.27
+  },
+  "b8_step_warm": {
+    "steps_executed": 129,
+    "batch_size": 8,
+    "elapsed_sec": 1.914,
+    "raw_step_tok_per_sec": 539.19
+  },
+  "b16_scan_cold": {
+    "token_counts": [
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129
+    ],
+    "total_generated_tokens": 2064,
+    "steps_executed": 129,
+    "batch_size": 16,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 19.9485,
+    "effective_tok_per_sec": 103.47,
+    "raw_step_tok_per_sec": 103.47
+  },
+  "b16_scan_warm": {
+    "token_counts": [
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129
+    ],
+    "total_generated_tokens": 2064,
+    "steps_executed": 129,
+    "batch_size": 16,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 2.0364,
+    "effective_tok_per_sec": 1013.57,
+    "raw_step_tok_per_sec": 1013.57
+  },
+  "b16_step_cold": {
+    "steps_executed": 129,
+    "batch_size": 16,
+    "elapsed_sec": 19.7664,
+    "raw_step_tok_per_sec": 104.42
+  },
+  "b16_step_warm": {
+    "steps_executed": 129,
+    "batch_size": 16,
+    "elapsed_sec": 2.0465,
+    "raw_step_tok_per_sec": 1008.54
+  },
+  "b32_scan_cold": {
+    "token_counts": [
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129
+    ],
+    "total_generated_tokens": 4128,
+    "steps_executed": 129,
+    "batch_size": 32,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 21.7913,
+    "effective_tok_per_sec": 189.43,
+    "raw_step_tok_per_sec": 189.43
+  },
+  "b32_scan_warm": {
+    "token_counts": [
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129,
+      129
+    ],
+    "total_generated_tokens": 4128,
+    "steps_executed": 129,
+    "batch_size": 32,
+    "prompt_pad_len": 128,
+    "elapsed_sec": 2.3181,
+    "effective_tok_per_sec": 1780.74,
+    "raw_step_tok_per_sec": 1780.74
+  },
+  "b32_step_cold": {
+    "steps_executed": 129,
+    "batch_size": 32,
+    "elapsed_sec": 21.3373,
+    "raw_step_tok_per_sec": 193.46
+  },
+  "b32_step_warm": {
+    "steps_executed": 129,
+    "batch_size": 32,
+    "elapsed_sec": 2.324,
+    "raw_step_tok_per_sec": 1776.26
+  }
+}
