@@ -98,6 +98,13 @@ print("Active Accelerator:", DEVICE, "| PyTorch:", torch.__version__)"""
         code_cell(
             """# @title 9. Run Pure JAX KV Microbenchmark & JaxStaticGemma4Engine (1,780.74 -> 1,849.65 tok/s)
 import gc
+import sys
+if "/content" not in sys.path:
+    sys.path.insert(0, "/content")
+
+import importlib
+import gemma4_surgery.benchmarks.jax_fast_infer as _jfi
+importlib.reload(_jfi)
 from gemma4_surgery.benchmarks.jax_fast_infer import run_jax_kv_update_microbenchmark, JaxStaticGemma4Engine
 
 print("=== 16-Step JAX KV-Cache Update Microbenchmark ===")

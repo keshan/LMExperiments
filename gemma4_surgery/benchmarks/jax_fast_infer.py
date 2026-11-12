@@ -841,3 +841,90 @@ class JaxStaticGemma4Engine:
             "mean_tokens_per_item": round(total_gen_toks / max(len(user_prompts), 1), 1),
         }
 
+
+def run_jax_kv_update_microbenchmark(steps: int = 16) -> str:
+    """
+    16-step JAX KV-cache update microbenchmark on TPU/GPU comparing:
+    1. Dynamic concatenation (jnp.concatenate)
+    2. Static buffer with Python integer slice (.at[i:i+1].set)
+    3. jax.lax.dynamic_update_slice with buffer donation in Python loop
+    4. Fused jax.lax.scan + jax.lax.dynamic_update_slice (0 Python loop overhead)
+    """
+    dev = jax.devices()[0]
+    q = jax.device_put(jnp.ones((1, 8, 1, 256), dtype=jnp.bfloat16), dev)
+    k_steps = jax.device_put(jnp.ones((steps, 1, 1, 1, 256), dtype=jnp.bfloat16), dev)
+
+    # Method 1: Dynamic jnp.concatenate (shape grows -> recompiles every step!)
+    @jax.jit
+    def step_concat(k_dyn, k_new, q_vec):
+        k_next = jnp.concatenate([k_dyn, k_new], axis=2)
+        attn = jax.nn.softmax(jnp.einsum("bhqd,bhkd->bhqk", q_vec, jnp.repeat(k_next, 8, axis=1)), axis=-1)
+        return k_next, attn
+
+    k_dyn = jax.device_put(jnp.zeros((1, 1, 4, 256), dtype=jnp.bfloat16), dev)
+    t0 = time.perf_counter()
+    for i in range(steps):
+        k_dyn, attn = step_concat(k_dyn, k_steps[i], q)
+    attn.block_until_ready()
+    t_concat_ms = (time.perf_counter() - t0) * 1000.0
+
+    # Method 2: Static buffer with Python int slice (static_argnums -> recompiles every step!)
+    @partial(jax.jit, static_argnums=(2,))
+    def step_py_slice(buf, k_new, idx_int, q_vec):
+        buf_next = buf.at[:, :, idx_int : idx_int + 1, :].set(k_new)
+        attn = jax.nn.softmax(jnp.einsum("bhqd,bhkd->bhqk", q_vec, jnp.repeat(buf_next, 8, axis=1)), axis=-1)
+        return buf_next, attn
+
+    buf_slice = jax.device_put(jnp.zeros((1, 1, 64, 256), dtype=jnp.bfloat16), dev)
+    t0 = time.perf_counter()
+    for i in range(steps):
+        buf_slice, attn = step_py_slice(buf_slice, k_steps[i], i, q)
+    attn.block_until_ready()
+    t_slice_ms = (time.perf_counter() - t0) * 1000.0
+
+    # Method 3: jax.lax.dynamic_update_slice + buffer donation in Python loop (0 recompiles!)
+    @partial(jax.jit, donate_argnums=(0,))
+    def step_dus(buf, k_new, pos_t, q_vec):
+        buf_next = jax.lax.dynamic_update_slice(buf, k_new, (0, 0, pos_t, 0))
+        attn = jax.nn.softmax(jnp.einsum("bhqd,bhkd->bhqk", q_vec, jnp.repeat(buf_next, 8, axis=1)), axis=-1)
+        return buf_next, attn
+
+    buf_dus = jax.device_put(jnp.zeros((1, 1, 64, 256), dtype=jnp.bfloat16), dev)
+    pos_arr = jax.device_put(jnp.arange(steps, dtype=jnp.int32), dev)
+    buf_dus, attn = step_dus(buf_dus, k_steps[0], pos_arr[0], q)  # Warmup 1 compile
+    attn.block_until_ready()
+
+    t0 = time.perf_counter()
+    for i in range(steps):
+        buf_dus, attn = step_dus(buf_dus, k_steps[i], pos_arr[i], q)
+    attn.block_until_ready()
+    t_dus_ms = (time.perf_counter() - t0) * 1000.0
+
+    # Method 4: Fused jax.lax.scan + jax.lax.dynamic_update_slice (0 Python loop overhead!)
+    @partial(jax.jit, donate_argnums=(0,))
+    def scan_dus(buf, k_all, pos_all, q_vec):
+        def body(carry_buf, xs):
+            k_new, pos_t = xs
+            b_next = jax.lax.dynamic_update_slice(carry_buf, k_new, (0, 0, pos_t, 0))
+            attn = jax.nn.softmax(jnp.einsum("bhqd,bhkd->bhqk", q_vec, jnp.repeat(b_next, 8, axis=1)), axis=-1)
+            return b_next, attn
+        return jax.lax.scan(body, buf, (k_all, pos_all))
+
+    buf_scan = jax.device_put(jnp.zeros((1, 1, 64, 256), dtype=jnp.bfloat16), dev)
+    buf_scan, attn_seq = scan_dus(buf_scan, k_steps, pos_arr, q)  # Warmup 1 compile
+    attn_seq.block_until_ready()
+
+    t0 = time.perf_counter()
+    buf_scan, attn_seq = scan_dus(buf_scan, k_steps, pos_arr, q)
+    attn_seq.block_until_ready()
+    t_scan_ms = (time.perf_counter() - t0) * 1000.0
+
+    report = (
+        f"1. JAX Dynamic Concat (jnp.concatenate)      | Compiles: 16 | Time: {t_concat_ms:7.2f} ms (1.0x)\n"
+        f"2. JAX Python Slice (.at[i:i+1].set)         | Compiles: 16 | Time: {t_slice_ms:7.2f} ms ({t_concat_ms/t_slice_ms:.1f}x)\n"
+        f"3. JAX dynamic_update_slice (Python loop)    | Compiles:  0 | Time: {t_dus_ms:7.2f} ms ({t_concat_ms/t_dus_ms:.1f}x)\n"
+        f"4. JAX Fused lax.scan + dynamic_update_slice | Compiles:  0 | Time: {t_scan_ms:7.3f} ms ({t_concat_ms/t_scan_ms:.0f}x!)"
+    )
+    return report
+
+
