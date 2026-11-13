@@ -6,7 +6,7 @@ A repository of reproducible mechanistic interpretability experiments, zero-trai
 [![TPU v5e Ready](https://img.shields.io/badge/TPU-v5e--1%20Ready-blue)](https://cloud.google.com/tpu)
 [![Model](https://img.shields.io/badge/Model-Gemma%204%20E2B--it-orange)](https://huggingface.co/google/gemma-4-E2B-it)
 [![Framework](https://img.shields.io/badge/Framework-PyTorch%20%7C%20JAX-red)](https://github.com/google/jax)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
 ---
 
@@ -182,3 +182,9 @@ cd LMExperiments/gemma4_surgery
 # Install requirements
 pip install torch transformers accelerate datasets jax jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
+
+---
+
+## License
+
+Copyright 2026 Keshan Sodimana. Licensed under the [Apache License, Version 2.0](LICENSE).
