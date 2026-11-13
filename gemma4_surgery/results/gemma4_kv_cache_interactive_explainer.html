@@ -432,34 +432,33 @@
                 <td class="py-3 px-4 text-slate-400">Inductor AOT compile took 261s initially</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-purple-500/5">
-                <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen)</td>
+                <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen, fp16)</td>
                 <td class="py-3 px-4">1</td>
-                <td class="py-3 px-4 text-emerald-400">9.9 GiB</td>
-                <td class="py-3 px-4">11.98 tok/s</td>
-                <td class="py-3 px-4 text-purple-300">Compact memory footprint, eager CUDA kernels</td>
+                <td class="py-3 px-4 text-emerald-400">9.53 GiB</td>
+                <td class="py-3 px-4">14.14 tok/s</td>
+                <td class="py-3 px-4 text-purple-300">Compact memory footprint, native fp16 CUDA kernels</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-purple-500/5">
-                <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen)</td>
+                <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen, fp16)</td>
                 <td class="py-3 px-4">8</td>
-                <td class="py-3 px-4 text-emerald-400">11.4 GiB</td>
-                <td class="py-3 px-4 font-bold text-white">45.09 tok/s</td>
-                <td class="py-3 px-4 text-purple-300">Near-linear concurrency scaling</td>
+                <td class="py-3 px-4 text-emerald-400">9.67 GiB</td>
+                <td class="py-3 px-4 font-bold text-white">100.92 tok/s</td>
+                <td class="py-3 px-4 text-purple-300">Linear concurrency scaling inside 10 GiB VRAM</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-purple-500/10">
-                <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen)</td>
-                <td class="py-3 px-4">16</td>
-                <td class="py-3 px-4 text-emerald-400">13.2 GiB</td>
-                <td class="py-3 px-4 font-bold text-purple-300 text-sm">69.93 tok/s</td>
-                <td class="py-3 px-4 text-emerald-400 font-semibold">Fits comfortably in 15GB VRAM</td>
+                <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen, fp16)</td>
+                <td class="py-3 px-4">16 / 32</td>
+                <td class="py-3 px-4 text-emerald-400">9.80–10.16 GiB</td>
+                <td class="py-3 px-4 font-bold text-purple-300 text-sm">195.53 / 395.01 tok/s</td>
+                <td class="py-3 px-4 text-emerald-400 font-semibold">Fits comfortably inside 10.2 GiB on 15 GB T4</td>
               </tr>
-              <tr class="hover:bg-slate-800/30 bg-red-500/10">
-                <td class="py-3 px-4 font-semibold text-red-400">vLLM (Stock PagedAttention Engine)</td>
-                <td class="py-3 px-4">All</td>
-                <td class="py-3 px-4 text-red-400 font-bold">OOM on 15GB T4</td>
-                <td class="py-3 px-4 text-red-400 font-bold">0.00 tok/s (Crashed)</td>
-                <td class="py-3 px-4 text-red-300 text-xs">
-                  <span class="font-bold">ValueError: No available memory for cache blocks.</span>
-                  PagedAttention insists on uniform 35-layer blocks, starving VRAM.
+              <tr class="hover:bg-slate-800/30 bg-cyan-500/10">
+                <td class="py-3 px-4 font-semibold text-cyan-400">vLLM 0.33.0 (Turing TRITON tile=16, half)</td>
+                <td class="py-3 px-4">1..32</td>
+                <td class="py-3 px-4 text-amber-300 font-bold">12.71–12.76 GiB</td>
+                <td class="py-3 px-4 text-cyan-300 font-bold">15.19 -> 461.88 tok/s</td>
+                <td class="py-3 px-4 text-slate-300 text-xs">
+                  Stock `TRITON_ATTN` hits 98 KB &gt; 64 KB SMEM limit on `head_dim=512`; clamping `tile=16` enables 48/48 match.
                 </td>
               </tr>
             </tbody>

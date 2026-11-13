@@ -1,0 +1,73 @@
+{
+  "gpu": "Tesla T4",
+  "vllm_version": "0.33.0",
+  "hf_b1_tps": 11.83,
+  "hf_b1_tokens": 97,
+  "hf_b1_sec": 8.2002,
+  "hf_vs_pt_prefix_match": true,
+  "hf_vs_vllm_48_match": "48/48",
+  "pt_static_t4": [
+    {
+      "B": 1,
+      "cold_tps": 13.28,
+      "warm_tps": 14.14,
+      "warm_s": 9.1202,
+      "peak_alloc_gib": 9.534
+    },
+    {
+      "B": 8,
+      "cold_tps": 101.43,
+      "warm_tps": 100.92,
+      "warm_s": 10.2261,
+      "peak_alloc_gib": 9.665
+    },
+    {
+      "B": 16,
+      "cold_tps": 193.35,
+      "warm_tps": 195.53,
+      "warm_s": 10.5557,
+      "peak_alloc_gib": 9.801
+    },
+    {
+      "B": 32,
+      "cold_tps": 368.24,
+      "warm_tps": 395.01,
+      "warm_s": 10.4505,
+      "peak_alloc_gib": 10.155
+    }
+  ],
+  "vllm_init_sec": 182.79,
+  "vllm_t4": [
+    {
+      "batch_size": 1,
+      "elapsed_sec": 8.4258,
+      "generated_tokens": 128,
+      "throughput_tok_per_sec": 15.19,
+      "peak_alloc_gib": 12.714
+    },
+    {
+      "batch_size": 8,
+      "elapsed_sec": 8.1918,
+      "generated_tokens": 1024,
+      "throughput_tok_per_sec": 125.0,
+      "peak_alloc_gib": 12.723
+    },
+    {
+      "batch_size": 16,
+      "elapsed_sec": 8.895,
+      "generated_tokens": 2048,
+      "throughput_tok_per_sec": 230.24,
+      "peak_alloc_gib": 12.733
+    },
+    {
+      "batch_size": 32,
+      "elapsed_sec": 8.8682,
+      "generated_tokens": 4096,
+      "throughput_tok_per_sec": 461.88,
+      "peak_alloc_gib": 12.757
+    }
+  ],
+  "hf_text_48": "A static-shape ring KV cache dramatically accelerates LLM decoding on XLA TPUs because it eliminates the overhead associated with dynamic memory allocation and deallocation during the decoding process. By pre-allocating a fixed-size ring structure, the",
+  "pt_text_48": "A static-shape ring KV cache dramatically accelerates LLM decoding on XLA TPUs because it eliminates the overhead associated with dynamic memory allocation and deallocation during the decoding process. By pre-allocating a fixed-size ring st",
+  "vllm_text_48": "A static-shape ring KV cache dramatically accelerates LLM decoding on XLA TPUs because it eliminates the overhead associated with dynamic memory allocation and deallocation during the decoding process. By pre-allocating a fixed-size ring structure, the"
+}

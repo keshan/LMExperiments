@@ -298,10 +298,10 @@
           </article>
 
           <article class="depth-card depth-intermediate bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)] mb-1">Intermediate Systems: Why Stock vLLM Crashes on 15GB GPU</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)] mb-1">Intermediate Systems: vLLM 0.33.0 &amp; Turing Shared-Memory Fix</h3>
             <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">
-              We also benchmarked stock PyPI <code>vLLM</code> (`vllm_direct_run.log`) on a free Colab Tesla T4 GPU (`14.75 GiB`). After loading `9.85 GiB` of weights, vLLM crashed with <code>ValueError: No available memory for cache blocks</code> because its uniform 35-layer `LBNHC` PagedAttention allocator is unaware that Layers 15–34 share frozen KV caches!<br><br>
-              By allocating static buffers strictly for `L0..L14`, `Gemma4StaticKVCache` saves <strong>57.14% KV memory</strong>, scaling comfortably to `B=16` on T4 GPU (`69.93 tok/s`) and `B=32` on TPU `v5e-1` (`154.63 tok/s`).
+              We also benchmarked <code>vLLM 0.33.0</code> on a free Colab Tesla T4 GPU (`14.56 GiB`) after releasing PyTorch cuBLAS workspaces (`torch._C._cuda_clearCublasWorkspaces()` -> `14.43 GiB` free). Because stock `TRITON_ATTN` exceeds Turing's `65,536 B` shared-memory limit on Gemma 4's `head_dim=512` global layers (`98,304 B`), clamping `tile=16` in native `float16` unlocks `461.88 tok/s` at `B=32` (`12.76 GiB` peak).<br><br>
+              Meanwhile, allocating static KV buffers strictly for `L0..L14` in `StaticGemma4Engine` saves <strong>57.14% KV memory</strong>, scaling to `195.53 tok/s` (`B=16`) / `395.01 tok/s` (`B=32`) inside `9.53–10.16 GiB` on T4 GPU, and up to `1,849.65 tok/s` in Pure JAX on Cloud TPU `v5e-1`!
             </p>
           </article>
 
@@ -342,8 +342,12 @@ if layer_idx &lt; self.first_kv_shared:
                 <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 4%"></div></div>
               </div>
               <div>
-                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (T4 GPU, B=16 Warm, vLLM OOMs!)</span><span class="font-mono font-semibold">69.93 tok/s (22.1x)</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 43%"></div></div>
+                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (T4 GPU `fp16`, B=32 Warm, 10.16 GiB)</span><span class="font-mono font-semibold">395.01 tok/s</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 85%"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between"><span><code>vLLM 0.33.0</code> (T4 GPU `half` + `tile=16`, B=32, 12.76 GiB)</span><span class="font-mono font-semibold">461.88 tok/s</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 100%"></div></div>
               </div>
               <div>
                 <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (TPU v5e-1, B=16 Warm)</span><span class="font-mono font-semibold">89.37 tok/s (28.2x)</span></div>

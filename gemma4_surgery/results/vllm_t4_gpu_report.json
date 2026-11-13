@@ -1,0 +1,64 @@
+{
+  "vllm_version": "0.33.0",
+  "model": "unsloth/gemma-4-E2B-it",
+  "device": "Tesla T4",
+  "compute_capability": "7.5",
+  "dtype": "half",
+  "max_model_len": 512,
+  "enforce_eager": true,
+  "turing_tile_fix_applied": true,
+  "vram_before_init": {
+    "device": "Tesla T4",
+    "free_gib": 14.461,
+    "total_gib": 14.563,
+    "allocated_gib": 0.0,
+    "reserved_gib": 0.0
+  },
+  "load_sec": 184.15,
+  "batches": {
+    "B1": {
+      "batch_size": 1,
+      "max_tokens": 128,
+      "total_tokens": 128,
+      "elapsed_sec": 8.19,
+      "tok_per_sec": 15.63,
+      "peak_allocated_gib": 12.718,
+      "sample_text": "Here's how to solve the problem step-by-step:\n\n1. **Calculate the total number of eggs laid:**\n   Janet's ducks lay 16 e"
+    },
+    "B8": {
+      "batch_size": 8,
+      "max_tokens": 128,
+      "total_tokens": 1024,
+      "elapsed_sec": 7.8515,
+      "tok_per_sec": 130.42,
+      "peak_allocated_gib": 12.723,
+      "sample_text": ""
+    },
+    "B16": {
+      "batch_size": 16,
+      "max_tokens": 128,
+      "total_tokens": 2048,
+      "elapsed_sec": 8.376,
+      "tok_per_sec": 244.51,
+      "peak_allocated_gib": 12.734,
+      "sample_text": ""
+    },
+    "B32": {
+      "batch_size": 32,
+      "max_tokens": 128,
+      "total_tokens": 4096,
+      "elapsed_sec": 8.6853,
+      "tok_per_sec": 471.6,
+      "peak_allocated_gib": 12.758,
+      "sample_text": ""
+    }
+  },
+  "greedy_48": "Here's how to solve the problem step-by-step:\n\n1. **Calculate the total number of eggs laid:**\n   Janet's ducks lay 16 eggs per day.\n\n2. **Calculate the total number",
+  "vram_after_cleanup": {
+    "device": "Tesla T4",
+    "free_gib": 14.344,
+    "total_gib": 14.563,
+    "allocated_gib": 0.0,
+    "reserved_gib": 0.002
+  }
+}

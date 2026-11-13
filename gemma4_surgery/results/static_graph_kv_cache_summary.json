@@ -20,17 +20,24 @@
     "vllm_status": "Failed at import (Missing tpu_inference C++/PJRT package)"
   },
   "gpu_tesla_t4_metrics": {
-    "device": "NVIDIA Tesla T4 GPU (14.75 GiB VRAM)",
-    "hf_dynamic_cache_bs1_tok_s": 11.29,
+    "device": "NVIDIA Tesla T4 GPU (14.56 GiB VRAM)",
+    "dtype": "float16",
+    "hf_dynamic_cache_bs1_tok_s": 11.83,
     "hf_static_cache_cold_compile_time_s": 261.4,
     "hf_static_cache_warm_bs1_tok_s": 7.28,
-    "static_graph_engine_warm_bs1_tok_s": 11.98,
-    "static_graph_engine_warm_bs8_tok_s": 45.09,
-    "static_graph_engine_warm_bs16_tok_s": 69.93,
-    "vllm_status": "Crashed with ValueError: No available memory for cache blocks",
+    "static_graph_engine_warm_bs1_tok_s": 14.14,
+    "static_graph_engine_warm_bs8_tok_s": 100.92,
+    "static_graph_engine_warm_bs16_tok_s": 195.53,
+    "static_graph_engine_warm_bs32_tok_s": 395.01,
+    "static_graph_engine_peak_alloc_gib": 10.155,
+    "vllm_version": "0.33.0",
+    "vllm_stock_triton_status": "Crashed on sm_75 (head_dim=512 requires 98,304 B shared memory > 65,536 B T4 limit)",
+    "vllm_turing_tile16_status": "48/48 bit-exact greedy match (B=1: 15.19 -> B=8: 125.00 -> B=16: 230.24 -> B=32: 461.88 tok/s; standalone 471.60 tok/s)",
+    "vllm_kv_cache_gib": 2.36,
+    "vllm_peak_alloc_gib": 12.757,
     "vllm_weight_load_gib": 9.85,
     "vllm_uniform_layer_count": 35,
-    "vllm_root_cause": "Uniform LBNHC 35-layer block layout starves 15GB VRAM without CLA freeze awareness"
+    "vllm_root_cause": "Uniform LBNHC 35-layer block layout uses +57.14% KV memory vs 15-layer freeze; T4 sm_75 requires TRITON_ATTN tile=16 on head_dim>=512"
   },
   "microbenchmark_16_steps": {
     "torch_cat_dynamic": {
