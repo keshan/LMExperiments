@@ -26,7 +26,7 @@
           Static-Graph KV Cache for Gemma 4
         </h1>
         <p class="text-slate-400 text-sm md:text-base mt-1">
-          Demystifying 57.1% Memory Elimination & 48.8× TPU Speedup via Device-Tensor Graph Invariants
+          Demystifying 57.1% Memory Elimination & 42.0× PyTorch (508.5× Pure JAX) Average TPU Speedup via Device-Tensor Graph Invariants
         </p>
       </div>
       <div class="flex items-center gap-3">
@@ -268,7 +268,7 @@
           <button onclick="setSimMode('index')" id="sim-btn-index" class="p-4 rounded-xl border border-slate-800 bg-slate-950 text-left hover:bg-slate-800/50 transition-all">
             <span class="text-xs font-mono text-emerald-400 font-semibold block mb-1">METHOD C: DEVICE-TENSOR INDEX_COPY_</span>
             <code class="text-xs text-white block font-mono">buf.index_copy_(2, pos_tensor, new_kv)</code>
-            <span class="text-xs text-slate-400 mt-2 block">Index is a tensor operand. 0 recompilations!</span>
+            <span class="text-xs text-slate-400 mt-2 block">Index is a device tensor. 0 warm engine compiles (0.535 ms in JAX lax.scan)!</span>
           </button>
         </div>
 
@@ -277,8 +277,8 @@
           <div class="flex justify-between items-center mb-4">
             <span class="text-xs font-mono text-slate-400">STEP-BY-STEP DECODE TIMELINE (16 Steps):</span>
             <div class="flex items-center gap-4 text-xs font-mono">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-red-500 inline-block"></span> Graph Recompile (Slow ~350ms)</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span> Warm Execution (Fast ~2ms)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-red-500 inline-block"></span> Graph Recompile (Cold Compile Spike)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span> Warm Execution (Cached HLO Graph)</span>
             </div>
           </div>
 
@@ -291,11 +291,11 @@
           <div class="grid grid-cols-3 gap-4 text-center font-mono text-xs">
             <div class="p-3 bg-slate-900 rounded-lg border border-slate-800">
               <span class="text-slate-500 block mb-1">RECOMPILATIONS:</span>
-              <span id="sim-metric-recomp" class="text-lg font-bold text-red-400">54 Compilations</span>
+              <span id="sim-metric-recomp" class="text-lg font-bold text-red-400">48–54 Compiles</span>
             </div>
             <div class="p-3 bg-slate-900 rounded-lg border border-slate-800">
               <span class="text-slate-500 block mb-1">ELAPSED TIME (16 STEPS):</span>
-              <span id="sim-metric-time" class="text-lg font-bold text-red-400">0.576s</span>
+              <span id="sim-metric-time" class="text-lg font-bold text-red-400">639.6 ms (n=3 mean)</span>
             </div>
             <div class="p-3 bg-slate-900 rounded-lg border border-slate-800">
               <span class="text-slate-500 block mb-1">EFFECTIVE SPEEDUP:</span>
@@ -348,7 +348,7 @@
                 <td class="py-3 px-4">1</td>
                 <td class="py-3 px-4">Dynamic</td>
                 <td class="py-3 px-4 text-red-400 font-bold">432 recompilations</td>
-                <td class="py-3 px-4">3.89 tok/s</td>
+                <td class="py-3 px-4">3.64 tok/s (3.17–3.89, n=4)</td>
                 <td class="py-3 px-4 text-right text-slate-500">1.0× (Baseline)</td>
               </tr>
               <tr class="hover:bg-slate-800/30">
@@ -357,31 +357,63 @@
                 <td class="py-3 px-4">42 MB</td>
                 <td class="py-3 px-4 text-amber-400 font-bold">56 compilations</td>
                 <td class="py-3 px-4">0.29 tok/s</td>
-                <td class="py-3 px-4 text-right text-slate-500">0.07× (Cold compile lag)</td>
+                <td class="py-3 px-4 text-right text-slate-500">0.08× (Cold compile lag)</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-emerald-500/5">
-                <td class="py-3 px-4 font-semibold text-emerald-400">Static-Graph Engine (Warm)</td>
+                <td class="py-3 px-4 font-semibold text-emerald-400">PyTorch Static-Graph Engine (Warm)</td>
                 <td class="py-3 px-4">1</td>
                 <td class="py-3 px-4 text-emerald-400 font-bold">18 MB (-57.1%)</td>
-                <td class="py-3 px-4 text-emerald-400 font-bold">0 recompilations</td>
-                <td class="py-3 px-4 font-bold text-white">5.05 tok/s</td>
-                <td class="py-3 px-4 text-right text-emerald-400 font-bold">1.3×</td>
+                <td class="py-3 px-4 text-emerald-400 font-bold">0 warm compiles</td>
+                <td class="py-3 px-4 font-bold text-white">5.00 tok/s (4.69–5.44, n=5)</td>
+                <td class="py-3 px-4 text-right text-emerald-400 font-bold">1.37× (Cold: 3.52)</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-emerald-500/5">
-                <td class="py-3 px-4 font-semibold text-emerald-400">Static-Graph Engine (Warm)</td>
+                <td class="py-3 px-4 font-semibold text-emerald-400">PyTorch Static-Graph Engine (Warm)</td>
                 <td class="py-3 px-4">16</td>
                 <td class="py-3 px-4 text-emerald-400 font-bold">288 MB (-57.1%)</td>
-                <td class="py-3 px-4 text-emerald-400 font-bold">0 recompilations</td>
-                <td class="py-3 px-4 font-bold text-white">89.37 tok/s</td>
-                <td class="py-3 px-4 text-right text-emerald-400 font-bold">23.0×</td>
+                <td class="py-3 px-4 text-emerald-400 font-bold">0 warm compiles</td>
+                <td class="py-3 px-4 font-bold text-white">78.93 tok/s (73.17–89.37, n=4)</td>
+                <td class="py-3 px-4 text-right text-emerald-400 font-bold">21.7× (B=8: 38.93)</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-emerald-500/10">
-                <td class="py-3 px-4 font-semibold text-emerald-400">Static-Graph Engine (Warm)</td>
+                <td class="py-3 px-4 font-semibold text-emerald-400">PyTorch Static-Graph Engine (Warm)</td>
                 <td class="py-3 px-4">32</td>
                 <td class="py-3 px-4 text-emerald-400 font-bold">576 MB (-57.1%)</td>
-                <td class="py-3 px-4 text-emerald-400 font-bold">0 recompilations</td>
-                <td class="py-3 px-4 font-bold text-emerald-300 text-sm">154.63 tok/s</td>
-                <td class="py-3 px-4 text-right text-emerald-400 font-bold text-sm">48.8× Gain</td>
+                <td class="py-3 px-4 text-emerald-400 font-bold">0 warm compiles</td>
+                <td class="py-3 px-4 font-bold text-emerald-300 text-sm">152.73 tok/s (149.67–154.63, n=4)</td>
+                <td class="py-3 px-4 text-right text-emerald-400 font-bold text-sm">42.0× Mean Gain</td>
+              </tr>
+              <tr class="hover:bg-slate-800/30 bg-emerald-500/10">
+                <td class="py-3 px-4 font-semibold text-emerald-300">PyTorch Static + L30–L32 Bypass (Warm)</td>
+                <td class="py-3 px-4">32</td>
+                <td class="py-3 px-4 text-emerald-400 font-bold">576 MB (-57.1%)</td>
+                <td class="py-3 px-4 text-emerald-400 font-bold">0 warm compiles</td>
+                <td class="py-3 px-4 font-bold text-emerald-200 text-sm">161.90 tok/s (n=1, Colab)</td>
+                <td class="py-3 px-4 text-right text-emerald-300 font-bold text-sm">44.5× Gain</td>
+              </tr>
+              <tr class="hover:bg-slate-800/30 bg-cyan-500/10">
+                <td class="py-3 px-4 font-semibold text-cyan-300">Pure JAX Engine (Fused lax.scan)</td>
+                <td class="py-3 px-4">1</td>
+                <td class="py-3 px-4 text-cyan-400 font-bold">15 Active Layers</td>
+                <td class="py-3 px-4 text-cyan-400 font-bold">0 warm compiles</td>
+                <td class="py-3 px-4 font-bold text-white">71.32 tok/s (71.32–71.33, n=2)</td>
+                <td class="py-3 px-4 text-right text-cyan-300 font-bold">19.6× vs HF Mean</td>
+              </tr>
+              <tr class="hover:bg-slate-800/30 bg-cyan-500/10">
+                <td class="py-3 px-4 font-semibold text-cyan-300">Pure JAX Engine (Fused lax.scan)</td>
+                <td class="py-3 px-4">32</td>
+                <td class="py-3 px-4 text-cyan-400 font-bold">15 Active Layers</td>
+                <td class="py-3 px-4 text-cyan-400 font-bold">0 warm compiles</td>
+                <td class="py-3 px-4 font-bold text-cyan-200 text-sm">1,780.83 tok/s (1,780.74–1,780.91, n=2)</td>
+                <td class="py-3 px-4 text-right text-cyan-300 font-bold text-sm">489.6× vs HF Mean</td>
+              </tr>
+              <tr class="hover:bg-slate-800/30 bg-cyan-500/15">
+                <td class="py-3 px-4 font-semibold text-cyan-200">Pure JAX + L30–L32 Bypass (Fused Scan)</td>
+                <td class="py-3 px-4">32</td>
+                <td class="py-3 px-4 text-cyan-400 font-bold">15 Active Layers</td>
+                <td class="py-3 px-4 text-cyan-400 font-bold">0 warm compiles</td>
+                <td class="py-3 px-4 font-bold text-cyan-100 text-sm">1,849.66 tok/s (1,849.65–1,849.68, n=2)</td>
+                <td class="py-3 px-4 text-right text-cyan-200 font-bold text-sm">508.5× (3.95× vLLM T4)</td>
               </tr>
               <tr class="hover:bg-slate-800/30">
                 <td class="py-3 px-4 text-slate-400">vLLM on Cloud TPU v5e-1</td>
@@ -418,10 +450,10 @@
             </thead>
             <tbody class="divide-y divide-slate-800/60 text-slate-300">
               <tr class="hover:bg-slate-800/30">
-                <td class="py-3 px-4 font-semibold text-slate-200">Hugging Face Dynamic Cache</td>
+                <td class="py-3 px-4 font-semibold text-slate-200">Hugging Face Dynamic Cache (fp16)</td>
                 <td class="py-3 px-4">1</td>
-                <td class="py-3 px-4">10.1 GiB</td>
-                <td class="py-3 px-4">11.29 tok/s</td>
+                <td class="py-3 px-4">9.52 GiB</td>
+                <td class="py-3 px-4">12.22 tok/s (11.83–12.61, n=2)</td>
                 <td class="py-3 px-4 text-slate-400">CUDA driver dynamic dispatch (0 recompiles)</td>
               </tr>
               <tr class="hover:bg-slate-800/30">
@@ -435,30 +467,30 @@
                 <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen, fp16)</td>
                 <td class="py-3 px-4">1</td>
                 <td class="py-3 px-4 text-emerald-400">9.53 GiB</td>
-                <td class="py-3 px-4">14.14 tok/s</td>
+                <td class="py-3 px-4">13.75 tok/s (13.36–14.14, n=2)</td>
                 <td class="py-3 px-4 text-purple-300">Compact memory footprint, native fp16 CUDA kernels</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-purple-500/5">
                 <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen, fp16)</td>
                 <td class="py-3 px-4">8</td>
                 <td class="py-3 px-4 text-emerald-400">9.67 GiB</td>
-                <td class="py-3 px-4 font-bold text-white">100.92 tok/s</td>
+                <td class="py-3 px-4 font-bold text-white">101.72 tok/s (100.92–102.52, n=2)</td>
                 <td class="py-3 px-4 text-purple-300">Linear concurrency scaling inside 10 GiB VRAM</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-purple-500/10">
                 <td class="py-3 px-4 font-semibold text-purple-400">Static-Graph Engine (15-Layer Frozen, fp16)</td>
                 <td class="py-3 px-4">16 / 32</td>
                 <td class="py-3 px-4 text-emerald-400">9.80–10.16 GiB</td>
-                <td class="py-3 px-4 font-bold text-purple-300 text-sm">195.53 / 395.01 tok/s</td>
-                <td class="py-3 px-4 text-emerald-400 font-semibold">Fits comfortably inside 10.2 GiB on 15 GB T4</td>
+                <td class="py-3 px-4 font-bold text-purple-300 text-sm">200.33 / 381.72 tok/s (B=32: 368.42–395.01, n=2)</td>
+                <td class="py-3 px-4 text-emerald-400 font-semibold">Fits inside 10.2 GiB on 15 GB T4 (48/48 parity)</td>
               </tr>
               <tr class="hover:bg-slate-800/30 bg-cyan-500/10">
-                <td class="py-3 px-4 font-semibold text-cyan-400">vLLM 0.33.0 (Turing TRITON tile=16, half)</td>
+                <td class="py-3 px-4 font-semibold text-cyan-400">vLLM 0.33.0 (Clean GPU + Turing tile=16, default 0.92)</td>
                 <td class="py-3 px-4">1..32</td>
-                <td class="py-3 px-4 text-amber-300 font-bold">12.71–12.76 GiB</td>
-                <td class="py-3 px-4 text-cyan-300 font-bold">15.19 -> 461.88 tok/s</td>
+                <td class="py-3 px-4 text-amber-300 font-bold">12.71–12.86 GiB</td>
+                <td class="py-3 px-4 text-cyan-300 font-bold">15.40 -> 468.48 tok/s (B=32: 461.88–471.97, n=3)</td>
                 <td class="py-3 px-4 text-slate-300 text-xs">
-                  Stock `TRITON_ATTN` hits 98 KB &gt; 64 KB SMEM limit on `head_dim=512`; clamping `tile=16` enables 48/48 match.
+                  Stock `TRITON_ATTN` hits 98,304 &gt; 65,536 B SMEM on `head_dim=512`; `tile=16` clamp + `clearCublasWorkspaces()` yields 48/48 match (`B=8`: `109.38` / `127.71` steady; `B=16`: `240.96`).
                 </td>
               </tr>
             </tbody>
@@ -599,22 +631,22 @@
       const activeBtn = document.getElementById(`sim-btn-${mode}`);
       if (mode === 'dynamic') {
         activeBtn.classList.add('border-red-500/50', 'bg-red-500/10');
-        document.getElementById('sim-metric-recomp').innerText = "54 Compilations";
+        document.getElementById('sim-metric-recomp').innerText = "48–54 Compiles";
         document.getElementById('sim-metric-recomp').className = "text-lg font-bold text-red-400";
-        document.getElementById('sim-metric-time').innerText = "0.576s";
+        document.getElementById('sim-metric-time').innerText = "639.6 ms (n=3 mean)";
         document.getElementById('sim-metric-speedup').innerText = "1.0× Baseline";
       } else if (mode === 'slice') {
         activeBtn.classList.add('border-amber-500/50', 'bg-amber-500/10');
-        document.getElementById('sim-metric-recomp').innerText = "18 Compilations";
+        document.getElementById('sim-metric-recomp').innerText = "16–18 Compiles";
         document.getElementById('sim-metric-recomp').className = "text-lg font-bold text-amber-400";
-        document.getElementById('sim-metric-time').innerText = "0.316s";
-        document.getElementById('sim-metric-speedup').innerText = "1.8× Speedup";
+        document.getElementById('sim-metric-time').innerText = "433.6 ms (n=3 mean)";
+        document.getElementById('sim-metric-speedup').innerText = "1.48× Speedup";
       } else {
         activeBtn.classList.add('border-emerald-500/50', 'bg-emerald-500/10');
-        document.getElementById('sim-metric-recomp').innerText = "0 Recompilations";
+        document.getElementById('sim-metric-recomp').innerText = "0 Warm Engine Compiles";
         document.getElementById('sim-metric-recomp').className = "text-lg font-bold text-emerald-400";
-        document.getElementById('sim-metric-time').innerText = "0.012s";
-        document.getElementById('sim-metric-speedup').innerText = "48.0× Speedup";
+        document.getElementById('sim-metric-time').innerText = "379.1 ms PT loop (0.535 ms JAX scan)";
+        document.getElementById('sim-metric-speedup').innerText = "42.0× PT Engine (1,195× JAX vs PT cat)";
       }
 
       renderSimSteps(mode);

@@ -35,35 +35,39 @@ Mechanistic weight-space analysis and hardware-aware XLA compilation for Google 
 3. **Dormant KV-Shared Layer Bypass & `layer_scalar` Grafting (`S6b`)**:
    Layers `15..34` never compute new Keys or Values. Bypassing dormant **Layer 31** (`-56.6M` active parameters, $\cos = 0.981$) while folding its $\lambda_{31} = 0.8281$ into `L30.layer_scalar` achieves a **statistically significant `+7.03%` leap on pooled GSM8K (`84.38% -> 91.41%`, $p = 0.0352$)** at **`+11.6%` faster test speed (`87.62 tok/s`)**.
 
-4. **Static-Graph KV Cache Engines (PyTorch & JAX)**:
-   - **PyTorch (`StaticGemma4Engine`)**: Pre-allocates static KV buffers strictly for `L0–L14` (`-57.14%` KV memory) and updates via device-tensor `index_copy_`, eliminating 432 XLA recompilations and accelerating throughput from **`3.17 tok/s` to `154.63 tok/s` (`48.8x`)** at batch size 32 (**`161.90 tok/s` / `51.1x`** with `L30–L32` bypass).
-   - **JAX (`JaxStaticGemma4Engine`)**: Eliminates Python host-loop dispatch entirely via whole-loop `jax.lax.scan` and `jax.lax.dynamic_update_slice`, scaling to **`71.32 tok/s` (B=1), `540.97 tok/s` (B=8), `1,013.57 tok/s` (B=16), and `1,780.74 tok/s` (B=32)** with 100% bit-exact parity against PyTorch greedy generation.
+4. **Static-Graph KV Cache Engines (PyTorch, `vLLM`, & Pure JAX)**:
+   - **PyTorch (`StaticGemma4Engine`)**: Pre-allocates static KV buffers strictly for `L0–L14` (`-57.14%` KV memory) and updates via device-tensor `index_copy_`, eliminating 432 warm XLA recompilations and accelerating Cloud TPU `v5e-1` $B=32$ throughput from HF's **`3.64 tok/s` mean (`3.17–3.89`, `n=4`)** to **`152.73 tok/s` mean (`149.67–154.63`, `n=4`, `42.0x` average / up to `48.8x` vs `3.17`)** (**`161.90 tok/s` / `44.5x`** with `L30–L32` bypass). On a 15 GB Tesla T4 GPU (`float16`), `StaticGemma4Engine` averages **`381.72 tok/s` (`368.42–395.01`, `n=2`)** inside `10.16 GiB` peak VRAM.
+   - **T4 `vLLM 0.33.0` (`TRITON_ATTN` `tile=16` Fix)**: Releasing cuBLAS workspaces (`torch._C._cuda_clearCublasWorkspaces()`), running with `vLLM`'s default memory utilization (omitting `gpu_memory_utilization`), and clamping `TRITON_ATTN`'s prefill tile on `head_dim >= 512` to `16` resolves T4's `98,304 > 65,536 B` shared-memory limit, scaling across `n=3` T4 runs to **`468.48 tok/s` mean (`461.88–471.97`, `12.71–12.86 GiB` peak)** with `48/48` bit-exact parity.
+   - **Pure JAX (`JaxStaticGemma4Engine`)**: Eliminates Python host-loop LazyTensor overhead (`~170–199 ms/step`) via whole-loop `jax.lax.scan` and `jax.lax.dynamic_update_slice`, scaling across `n=2` TPU `v5e-1` runs to **`71.32 tok/s` ($B=1$), `540.98 tok/s` ($B=8$), `1,013.64 tok/s` ($B=16$), and `1,780.83 tok/s` ($B=32$)** — and **`1,849.66 tok/s` (`508.5x` vs. HF mean)** with `L30–L32` bypass and 100% bit-exact parity.
 
 ![Static-Graph KV Cache & TPU v5e-1 Telemetry Dashboard](gemma4_surgery/results/static_kv_telemetry_dashboard.png)
 ![PyTorch vs JAX TPU Performance Comparison](gemma4_surgery/results/pytorch_vs_jax_tpu_comparison.png)
 
 ---
 
-### Empirical Throughput Summary (Cloud TPU `v5e-1`)
+### Multi-Run Empirical Throughput Summary (Cloud TPU `v5e-1` & Tesla T4 GPU)
 
-| Engine / Mode | Framework | KV Layers Allocated | XLA Recompiles | Greedy Token Match | Throughput | Speedup |
+| Engine / Mode | Platform | KV Layers Allocated | Warm XLA Compiles | Greedy Token Match | Mean Throughput (`Min–Max`) | Speedup vs. Platform Mean |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **HF `model.generate` (`DynamicCache`, B=1)** | PyTorch | 35 (Dynamic) | `432` | Reference | `3.17 tok/s` | `1.0x` |
-| **Stock `vLLM 0.19.0`** | PyTorch / T4 GPU | 35 (Uniform) | — | Crashed (`OOM`) | `0.00 tok/s` | Failed |
-| **`StaticGemma4Engine` (`B=1`)** | PyTorch | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`5.44 tok/s`** | **`1.72x`** |
-| **`StaticGemma4Engine` (`B=16`)** | PyTorch | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`79.29–89.37 tok/s`** | **`25.0x–28.2x`** |
-| **`StaticGemma4Engine` (`B=32`, `sync=4`)** | PyTorch | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`152.81–154.63 tok/s`** | **`48.2x–48.8x`** |
-| **`StaticGemma4Engine` + `L30–L32` Bypass (`B=32`)** | PyTorch | **15 (`L0–L14`)** | **`0`** | Surgical | **`161.90 tok/s`** | **`51.1x`** |
-| **`JaxStaticGemma4Engine` (`B=1`, warm)** | JAX / XLA | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`71.32 tok/s`** | **`22.5x`** |
-| **`JaxStaticGemma4Engine` (`B=8`, warm)** | JAX / XLA | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`540.97 tok/s`** | **`170.7x`** |
-| **`JaxStaticGemma4Engine` (`B=16`, warm)** | JAX / XLA | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`1,013.57 tok/s`** | **`319.7x`** |
-| **`JaxStaticGemma4Engine` (`B=32`, warm)** | JAX / XLA | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`1,780.74 tok/s`** | **`561.7x`** |
+| **HF `model.generate` (`DynamicCache`, `B=1`, `n=4`)** | TPU `v5e-1` | 35 (Dynamic) | `432` | Reference | `3.64 tok/s` (`3.17–3.89`) | `1.00x` (TPU Base) |
+| **`StaticGemma4Engine` (`B=1`, `n=5`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`5.00 tok/s`** (`4.69–5.44`) | **`1.37x`** |
+| **`StaticGemma4Engine` (`B=8`, `n=1`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`38.93 tok/s`** | **`10.7x`** |
+| **`StaticGemma4Engine` (`B=16`, `n=4`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`78.93 tok/s`** (`73.17–89.37`) | **`21.7x`** |
+| **`StaticGemma4Engine` (`B=32`, `sync=4`, `n=4`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`152.73 tok/s`** (`149.67–154.63`) | **`42.0x`** *(up to `48.8x`)* |
+| **`StaticGemma4Engine` + `L30–L32` Bypass (`B=32`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | Surgical | **`161.90 tok/s`** | **`44.5x`** *(up to `51.1x`)* |
+| **`JaxStaticGemma4Engine` (`B=1`, warm, `n=2`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`71.32 tok/s`** (`71.32–71.33`) | **`19.6x`** |
+| **`JaxStaticGemma4Engine` (`B=8`, warm, `n=2`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`540.98 tok/s`** (`540.97–540.99`) | **`148.7x`** |
+| **`JaxStaticGemma4Engine` (`B=16`, warm, `n=2`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`1,013.64 tok/s`** (`1,013.57–1,013.71`) | **`278.7x`** |
+| **`JaxStaticGemma4Engine` (`B=32`, warm, `n=2`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | **100% Bit-Exact** | **`1,780.83 tok/s`** (`1,780.74–1,780.91`) | **`489.6x`** |
+| **`JaxStaticGemma4Engine` + `L30–L32` Bypass (`B=32`, `n=2`)** | TPU `v5e-1` | **15 (`L0–L14`)** | **`0`** | Surgical | **`1,849.66 tok/s`** (`1,849.65–1,849.68`) | **`508.5x`** |
+| **`StaticGemma4Engine` (`B=32`, `fp16`, `n=2`)** | Tesla T4 GPU | **15 (`L0–L14`)** | `0` (CUDA) | **100% Bit-Exact** | **`381.72 tok/s`** (`368.42–395.01`, `10.16 GiB`) | **`31.2x`** *(vs T4 HF `12.22`)* |
+| **`vLLM 0.33.0` (`tile=16`, `B=32`, `half`, `n=3`)** | Tesla T4 GPU | 5 Hybrid Grps | `0` (CUDA) | **100% (`48/48`)** | **`468.48 tok/s`** (`461.88–471.97`, `12.76–12.86 GiB`) | **`38.3x`** *(vs T4 HF `12.22`)* |
 
 ---
 
-### Reproducing the Baseline Bottlenecks
+### Reproducing the Baseline Bottlenecks & Clean T4 `vLLM` Fix
 
-#### 1. Hugging Face Dynamic Cache XLA Recompilation Trap (`3.17–3.89 tok/s`)
+#### 1. Hugging Face Dynamic Cache XLA Recompilation Trap (`3.17–3.89 tok/s`, `3.64 tok/s` Mean)
 Hugging Face's default `DynamicCache` dynamically concatenates keys and values per token step, mutating tensor shapes on every iteration and forcing the XLA compiler on Cloud TPU to recompile the 35-layer graph 432 times:
 
 ```python
@@ -76,7 +80,7 @@ tokenizer = AutoTokenizer.from_pretrained("unsloth/gemma-4-E2B-it")
 
 inputs = tokenizer("Janet's ducks lay 16 eggs per day...", return_tensors="pt").to("tpu")
 
-# Triggers 432 StableHLO JIT recompilations -> 3.17 to 3.89 tok/s
+# Triggers 432 StableHLO JIT recompilations -> 3.64 tok/s mean (3.17–3.89 tok/s)
 t0 = time.perf_counter()
 with torch.no_grad():
     outputs = model.generate(**inputs, max_new_tokens=96, min_new_tokens=96, do_sample=False)
@@ -84,32 +88,31 @@ torch.accelerator.synchronize()
 print(f"HF DynamicCache Speed: {96.0 / (time.perf_counter() - t0):.2f} tok/s (432 XLA recompilations)")
 ```
 
-#### 2. Stock vLLM Memory Crash on 15 GB GPU (`ValueError: No available memory for cache blocks`)
-Stock vLLM's `CacheEngine` allocates KV blocks uniformly across all 35 layers because its uniform PagedAttention memory manager lacks awareness of Gemma 4's 20-layer KV freeze (Layers 15–34 share Layers 13/14). On a standard 15 GB GPU (such as a free Google Colab Tesla T4), loading 9.85 GB of weights leaves insufficient VRAM for 35 layers of cache:
+#### 2. Running `vLLM 0.33.0` Cleanly on a 15 GB Tesla T4 GPU (`torch._C._cuda_clearCublasWorkspaces()` + `TRITON_ATTN` `tile=16`)
+On a 14.56 GiB Tesla T4 (`sm_75`), loading Gemma 4's `float16` weights takes `9.85 GiB` in `vLLM`. If a prior PyTorch model was loaded in the same kernel without clearing cuBLAS workspaces, or if `gpu_memory_utilization` is artificially lowered below `0.92`, `kv_cache_planning.py` fails to reserve KV blocks. Conversely, on a cleanly freed GPU (`torch._C._cuda_clearCublasWorkspaces()` -> `14.25–14.46 GiB` free), stock `TRITON_ATTN` crashes on Gemma 4's `head_dim=512` global layers because `tile=32` exceeds T4's `65,536` B shared memory (`98,304` B requested). Clamping the Turing prefill tile to `16` unlocks full `B=32` batch scaling (**`468.48 tok/s` mean**):
 
 ```python
-# benchmarks/bench_vllm_gemma4.py
-from vllm import LLM
+# Clean GPU + Turing sm_75 tile=16 fix (benchmarks/bench_vllm_gemma4.py)
+import os, gc, torch
+os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
 
-# Crashes during engine initialization on a 15 GB GPU (e.g. Tesla T4)
+gc.collect()
+torch._C._cuda_clearCublasWorkspaces()
+torch.cuda.empty_cache()
+
+from vllm import LLM
+import vllm.v1.attention.backends.triton_attn as ta
+_orig_tile = ta.TritonAttentionImpl._get_tile_size
+ta.TritonAttentionImpl._get_tile_size = staticmethod(lambda hs: 16 if hs >= 512 else _orig_tile(hs))
+
+# Omit gpu_memory_utilization so vLLM uses default 0.92 after clean GPU release
 llm = LLM(
     model="unsloth/gemma-4-E2B-it",
+    dtype="half",
     max_model_len=512,
-    gpu_memory_utilization=0.75,
     enforce_eager=True,
     trust_remote_code=True,
 )
-```
-
-**Resulting Stack Trace** (archived in [`gemma4_surgery/results/vllm_direct_run.log`](gemma4_surgery/results/vllm_direct_run.log)):
-```text
-  File ".../vllm/v1/core/kv_cache_planning.py", line 1554, in get_kv_cache_configs
-    _check_enough_kv_cache_memory(...)
-  File ".../vllm/v1/core/kv_cache_planning.py", line 57, in _check_enough_kv_cache_memory
-    raise ValueError(
-ValueError: No available memory for the cache blocks. Try increasing `gpu_memory_utilization`
-when initializing the engine (this flag also controls CPU memory reservation on the CPU backend,
-despite its name). See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
 ```
 
 ---
@@ -127,7 +130,7 @@ LMExperiments/
     ├── benchmarks/
     │   ├── eval_harness.py                     # Zero-leakage evaluation harness (GSM8K, ARC, MMLU-Pro, MBPP)
     │   ├── fast_infer.py                       # PyTorch StaticGemma4Engine & Gemma4StaticKVCache
-    │   ├── jax_fast_infer.py                   # Pure JAX/XLA JaxStaticGemma4Engine (1,780 tok/s)
+    │   ├── jax_fast_infer.py                   # Pure JAX/XLA JaxStaticGemma4Engine (1,781 -> 1,850 tok/s)
     │   └── bench_vllm_gemma4.py                # Stock vLLM comparison script
     ├── surgeries/
     │   ├── weight_surgeon.py                   # Reversible zero-gradient weight & buffer surgery manager

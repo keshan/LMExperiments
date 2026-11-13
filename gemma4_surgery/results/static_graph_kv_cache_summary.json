@@ -8,49 +8,113 @@
   "bit_level_exact_greedy_match": true,
   "tpu_v5e_metrics": {
     "device": "Cloud TPU v5e-1 (16 GiB HBM)",
-    "hf_dynamic_cache_bs1_tok_s": 3.89,
+    "hf_dynamic_cache_bs1_mean_tok_s": 3.64,
+    "hf_dynamic_cache_bs1_range_tok_s": [3.17, 3.89],
+    "hf_dynamic_cache_runs": 4,
     "hf_dynamic_cache_recompilations": 432,
     "hf_static_cache_cold_bs1_tok_s": 0.29,
     "hf_static_cache_recompilations": 56,
-    "static_graph_engine_warm_bs1_tok_s": 5.05,
-    "static_graph_engine_warm_bs16_tok_s": 89.37,
-    "static_graph_engine_warm_bs32_tok_s": 154.63,
-    "static_graph_engine_recompilations": 0,
-    "end_to_end_throughput_speedup": 48.8,
+    "static_graph_engine_cold_bs1_mean_tok_s": 3.52,
+    "static_graph_engine_cold_bs1_range_tok_s": [3.43, 3.62],
+    "static_graph_engine_warm_bs1_mean_tok_s": 5.00,
+    "static_graph_engine_warm_bs1_range_tok_s": [4.69, 5.44],
+    "static_graph_engine_warm_bs8_tok_s": 38.93,
+    "static_graph_engine_warm_bs16_mean_tok_s": 78.93,
+    "static_graph_engine_warm_bs16_range_tok_s": [73.17, 89.37],
+    "static_graph_engine_warm_bs32_mean_tok_s": 152.73,
+    "static_graph_engine_warm_bs32_range_tok_s": [149.67, 154.63],
+    "static_graph_engine_bypass_bs32_tok_s": 161.90,
+    "static_graph_engine_warm_recompilations": 0,
+    "end_to_end_mean_speedup_vs_hf": 42.0,
+    "bypass_speedup_vs_hf_mean": 44.5,
+    "jax_static_engine_runs": 2,
+    "jax_static_engine_warm_bs1_mean_tok_s": 71.32,
+    "jax_static_engine_warm_bs1_range_tok_s": [71.32, 71.33],
+    "jax_static_engine_warm_bs8_mean_tok_s": 540.98,
+    "jax_static_engine_warm_bs8_range_tok_s": [540.97, 540.99],
+    "jax_static_engine_warm_bs16_mean_tok_s": 1013.64,
+    "jax_static_engine_warm_bs16_range_tok_s": [1013.57, 1013.71],
+    "jax_static_engine_warm_bs32_mean_tok_s": 1780.83,
+    "jax_static_engine_warm_bs32_range_tok_s": [1780.74, 1780.91],
+    "jax_static_engine_bypass_bs32_mean_tok_s": 1849.66,
+    "jax_static_engine_bypass_bs32_range_tok_s": [1849.65, 1849.68],
+    "jax_bypass_speedup_vs_hf_mean": 508.5,
     "vllm_status": "Failed at import (Missing tpu_inference C++/PJRT package)"
   },
   "gpu_tesla_t4_metrics": {
     "device": "NVIDIA Tesla T4 GPU (14.56 GiB VRAM)",
     "dtype": "float16",
-    "hf_dynamic_cache_bs1_tok_s": 11.83,
+    "hf_dynamic_cache_bs1_mean_tok_s": 12.22,
+    "hf_dynamic_cache_bs1_range_tok_s": [11.83, 12.61],
     "hf_static_cache_cold_compile_time_s": 261.4,
     "hf_static_cache_warm_bs1_tok_s": 7.28,
-    "static_graph_engine_warm_bs1_tok_s": 14.14,
-    "static_graph_engine_warm_bs8_tok_s": 100.92,
-    "static_graph_engine_warm_bs16_tok_s": 195.53,
-    "static_graph_engine_warm_bs32_tok_s": 395.01,
+    "static_graph_engine_warm_bs1_mean_tok_s": 13.75,
+    "static_graph_engine_warm_bs1_range_tok_s": [13.36, 14.14],
+    "static_graph_engine_warm_bs8_mean_tok_s": 101.72,
+    "static_graph_engine_warm_bs8_range_tok_s": [100.92, 102.52],
+    "static_graph_engine_warm_bs16_mean_tok_s": 200.33,
+    "static_graph_engine_warm_bs16_range_tok_s": [195.53, 205.14],
+    "static_graph_engine_warm_bs32_mean_tok_s": 381.72,
+    "static_graph_engine_warm_bs32_range_tok_s": [368.42, 395.01],
     "static_graph_engine_peak_alloc_gib": 10.155,
     "vllm_version": "0.33.0",
     "vllm_stock_triton_status": "Crashed on sm_75 (head_dim=512 requires 98,304 B shared memory > 65,536 B T4 limit)",
-    "vllm_turing_tile16_status": "48/48 bit-exact greedy match (B=1: 15.19 -> B=8: 125.00 -> B=16: 230.24 -> B=32: 461.88 tok/s; standalone 471.60 tok/s)",
-    "vllm_kv_cache_gib": 2.36,
-    "vllm_peak_alloc_gib": 12.757,
+    "vllm_turing_tile16_runs": 3,
+    "vllm_turing_tile16_mean_tok_s": {
+      "B1": 15.40,
+      "B8": 109.38,
+      "B8_steady": 127.71,
+      "B16": 240.96,
+      "B32": 468.48
+    },
+    "vllm_turing_tile16_range_tok_s": {
+      "B1": [15.19, 15.63],
+      "B8": [72.73, 130.42],
+      "B16": [230.24, 248.12],
+      "B32": [461.88, 471.97]
+    },
+    "vllm_kv_cache_gib": [2.34, 2.36],
+    "vllm_peak_alloc_gib": [12.714, 12.86],
     "vllm_weight_load_gib": 9.85,
     "vllm_uniform_layer_count": 35,
-    "vllm_root_cause": "Uniform LBNHC 35-layer block layout uses +57.14% KV memory vs 15-layer freeze; T4 sm_75 requires TRITON_ATTN tile=16 on head_dim>=512"
+    "vllm_root_cause": "Uniform LBNHC 35-layer block layout uses +57.14% KV memory vs 15-layer freeze; T4 sm_75 requires TRITON_ATTN tile=16 on head_dim>=512 and clearCublasWorkspaces() with default utilization (0.92)"
   },
-  "microbenchmark_16_steps": {
-    "torch_cat_dynamic": {
-      "recompilations": 54,
-      "time_s": 0.576
+  "microbenchmark_16_steps_tpu_n3": {
+    "pytorch_torch_cat_dynamic": {
+      "compilations_range": [48, 54],
+      "mean_time_ms": 639.6,
+      "range_time_ms": [541.5, 801.0]
     },
-    "python_slice_inplace": {
-      "recompilations": 18,
-      "time_s": 0.316
+    "pytorch_python_slice_inplace": {
+      "compilations_range": [16, 18],
+      "mean_time_ms": 433.6,
+      "range_time_ms": [312.9, 671.7]
     },
-    "device_tensor_index_copy": {
-      "recompilations": 0,
-      "time_s": 0.012
+    "pytorch_isolated_loop_index_copy": {
+      "isolated_loop_compilations_range": [16, 18],
+      "compiled_engine_warm_recompilations": 0,
+      "mean_time_ms": 379.1,
+      "range_time_ms": [291.5, 549.1]
+    },
+    "jax_jnp_concatenate": {
+      "compilations": 16,
+      "mean_time_ms": 785.62,
+      "range_time_ms": [715.59, 833.22]
+    },
+    "jax_at_slice_set": {
+      "compilations": 16,
+      "mean_time_ms": 733.71,
+      "range_time_ms": [620.87, 835.28]
+    },
+    "jax_dynamic_update_slice_loop": {
+      "compilations": 0,
+      "mean_time_ms": 17.40,
+      "range_time_ms": [16.65, 17.88]
+    },
+    "jax_fused_lax_scan_dus": {
+      "compilations": 0,
+      "mean_time_ms": 0.535,
+      "range_time_ms": [0.505, 0.583]
     }
   }
 }

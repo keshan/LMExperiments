@@ -282,8 +282,8 @@
       <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
           <div>
-            <h2 class="text-lg font-bold text-[var(--foreground)]">Chapter 3: Engineering <code>StaticGemma4Engine</code> — 48.2x to 51.1x Speedup on Free Colab TPU</h2>
-            <p class="text-xs text-[var(--muted-foreground)]">How we eliminated 432 XLA recompilations and cut KV cache memory by 57.14% with 100% bit-exact greedy equivalence</p>
+            <h2 class="text-lg font-bold text-[var(--foreground)]">Chapter 3: Engineering <code>StaticGemma4Engine</code> &amp; Pure JAX — 42.0x PyTorch (508.5x Pure JAX) Average TPU Speedup</h2>
+            <p class="text-xs text-[var(--muted-foreground)]">How we eliminated 432 XLA recompilations, cut KV cache memory by 57.14%, and scaled across PyTorch, vLLM (T4), and Pure JAX with 100% greedy equivalence</p>
           </div>
           <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-[var(--secondary)] border border-[var(--border)]">Exp 2 &amp; Exp 2b • Systems Contribution</span>
         </div>
@@ -292,24 +292,24 @@
           <article class="depth-card depth-beginner bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
             <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)] mb-1">Beginner Intuition: Why TPUs Hate Changing Shapes</h3>
             <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">
-              A Cloud TPU (`v5e-1`) is like a custom factory assembly line: before running math, its XLA compiler builds a specialized hardware circuit for the exact tensor shapes. When HuggingFace's default `generate()` appends a new token (`length 64 -> 65 -> 66`), the tensor shape changes on every single word! The TPU has to stop and rebuild the circuit <strong>432 times</strong>, crawling at `3.17 tokens/sec`.<br><br>
-              Our `StaticGemma4Engine` pre-allocates a fixed-size notepad for only the <strong>15 floors that actually write notes (`L0–L14`)</strong> and uses an on-chip pointer (`index_copy_`) so the circuit shape <strong>never changes</strong> (`0 recompilations`, up to `161.90 tokens/sec`)!
+              A Cloud TPU (`v5e-1`) is like a custom factory assembly line: before running math, its XLA compiler builds a specialized hardware circuit for the exact tensor shapes. When HuggingFace's default `generate()` appends a new token (`length 64 -> 65 -> 66`), the tensor shape changes on every single word! The TPU has to stop and rebuild the circuit <strong>432 times</strong>, averaging only `3.64 tokens/sec` (`3.17–3.89`, `n=4`).<br><br>
+              Our `StaticGemma4Engine` pre-allocates a fixed-size notepad for only the <strong>15 floors that actually write notes (`L0–L14`)</strong> and uses an on-chip pointer (`index_copy_`) so the warm circuit shape <strong>never changes</strong> (`0` warm engine recompilations, averaging `152.73 tokens/sec` in PyTorch and `1,780.83 -> 1,849.66 tokens/sec` in Pure JAX)!
             </p>
           </article>
 
           <article class="depth-card depth-intermediate bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
             <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)] mb-1">Intermediate Systems: vLLM 0.33.0 &amp; Turing Shared-Memory Fix</h3>
             <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">
-              We also benchmarked <code>vLLM 0.33.0</code> on a free Colab Tesla T4 GPU (`14.56 GiB`) after releasing PyTorch cuBLAS workspaces (`torch._C._cuda_clearCublasWorkspaces()` -> `14.43 GiB` free). Because stock `TRITON_ATTN` exceeds Turing's `65,536 B` shared-memory limit on Gemma 4's `head_dim=512` global layers (`98,304 B`), clamping `tile=16` in native `float16` unlocks `461.88 tok/s` at `B=32` (`12.76 GiB` peak).<br><br>
-              Meanwhile, allocating static KV buffers strictly for `L0..L14` in `StaticGemma4Engine` saves <strong>57.14% KV memory</strong>, scaling to `195.53 tok/s` (`B=16`) / `395.01 tok/s` (`B=32`) inside `9.53–10.16 GiB` on T4 GPU, and up to `1,849.65 tok/s` in Pure JAX on Cloud TPU `v5e-1`!
+              We also benchmarked <code>vLLM 0.33.0</code> on a free Colab Tesla T4 GPU (`14.56 GiB`) after releasing PyTorch cuBLAS workspaces (`torch._C._cuda_clearCublasWorkspaces()` -> `14.25–14.46 GiB` free) and omitting any manual memory cap (leaving the `0.92` default). Because stock `TRITON_ATTN` exceeds Turing's `65,536 B` shared-memory limit on Gemma 4's `head_dim=512` global layers (`98,304 B`), clamping `tile=16` in native `float16` unlocks a `468.48 tok/s` mean (`461.88–471.97`, `n=3`) at `B=32` (`12.71–12.86 GiB` peak).<br><br>
+              Meanwhile, allocating static KV buffers strictly for `L0..L14` in `StaticGemma4Engine` saves <strong>57.14% KV memory</strong>, averaging `200.33 tok/s` (`B=16`) / `381.72 tok/s` (`B=32`, range `368.42–395.01`, `n=2`) inside `9.53–10.16 GiB` on T4 GPU, and up to `1,849.66 tok/s` (`n=2` mean) in Pure JAX on Cloud TPU `v5e-1`!
             </p>
           </article>
 
           <article class="depth-card depth-advanced bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)] mb-1">Advanced XLA Lowering: Python Slice vs. <code>index_copy_</code></h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)] mb-1">Advanced XLA Lowering: Python Slice vs. <code>index_copy_</code> vs. <code>lax.scan</code></h3>
             <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">
-              Even with pre-allocated tensors, standard PyTorch in-place slicing <code>k_buf[:, :, s:s+1, :] = k_new</code> lowers to StableHLO `dynamic-update-slice` with compile-time integer constant $s$, causing 18 recompilations across 16 steps (`0.316s`).<br><br>
-              Replacing integer slices with a 1-element `int64` device tensor <code>decode_pos</code> (`shape [1]`) via <code>k_buf.index_copy_(2, decode_pos, k_new)</code> and computing causal/sliding masks via device tensor broadcasting `(pos_k <= decode_pos)` reduces 16-step microbenchmark latency from `0.576s` (`54` recompiles) to <strong>`0.012s` (`0` recompiles — 48x faster kernel execution)</strong>!
+              Even with pre-allocated tensors, standard PyTorch in-place slicing <code>k_buf[:, :, s:s+1, :] = k_new</code> lowers to StableHLO `dynamic-update-slice` with compile-time integer constant $s$, causing `16–18` recompilations across 16 steps (`433.6 ms`, `n=3` mean).<br><br>
+              Replacing integer slices with a 1-element `int64` device tensor <code>decode_pos</code> (`shape [1]`) via <code>k_buf.index_copy_(2, decode_pos, k_new)</code> drops isolated pass-1 loop latency from `639.6 ms` (`48–54` compiles for `torch.cat`) to `379.1 ms` (`0` warm engine compiles); moving to Pure JAX `jax.lax.scan` + `jax.lax.dynamic_update_slice` eliminates PyTorch's host IR dispatch and hits <strong>`0.535 ms` (`0` recompiles — `1,195x` faster than PyTorch `torch.cat`)</strong>!
             </p>
           </article>
         </div>
@@ -331,35 +331,43 @@ if layer_idx &lt; self.first_kv_shared:
           </figure>
 
           <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">Empirical Colab TPU v5e-1 &amp; T4 GPU Throughput Comparison</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">Multi-Run Mean Throughput Comparison (TPU `v5e-1` &amp; T4 GPU)</h3>
             <div class="space-y-2 text-xs">
               <div>
-                <div class="flex justify-between"><span>HF <code>DynamicCache</code> (TPU v5e-1, B=1, 432 recompiles)</span><span class="font-mono font-semibold">3.17 tok/s (1.0x)</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--muted-foreground)]" style="width: 2%"></div></div>
+                <div class="flex justify-between"><span>HF <code>DynamicCache</code> (TPU v5e-1, B=1, n=4)</span><span class="font-mono font-semibold">3.64 tok/s (3.17–3.89, 1.0x)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--muted-foreground)]" style="width: 1%"></div></div>
               </div>
               <div>
-                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (TPU v5e-1, B=1 Warm, 0 recompiles)</span><span class="font-mono font-semibold">5.44 tok/s (1.72x)</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 4%"></div></div>
+                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (TPU v5e-1, B=1 Warm, n=5)</span><span class="font-mono font-semibold">5.00 tok/s (4.69–5.44, 1.37x)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 1.5%"></div></div>
               </div>
               <div>
-                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (T4 GPU `fp16`, B=32 Warm, 10.16 GiB)</span><span class="font-mono font-semibold">395.01 tok/s</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 85%"></div></div>
+                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (TPU v5e-1, B=16 Warm, n=4)</span><span class="font-mono font-semibold">78.93 tok/s (73.17–89.37, 21.7x)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 4.3%"></div></div>
               </div>
               <div>
-                <div class="flex justify-between"><span><code>vLLM 0.33.0</code> (T4 GPU `half` + `tile=16`, B=32, 12.76 GiB)</span><span class="font-mono font-semibold">461.88 tok/s</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 100%"></div></div>
+                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (TPU v5e-1, B=32 Warm, n=4)</span><span class="font-mono font-semibold">152.73 tok/s (149.67–154.63, 42.0x)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 8.3%"></div></div>
               </div>
               <div>
-                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (TPU v5e-1, B=16 Warm)</span><span class="font-mono font-semibold">89.37 tok/s (28.2x)</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 55%"></div></div>
+                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> + <strong>L30–32 Bypass</strong> (TPU B=32)</span><span class="font-mono font-semibold">161.90 tok/s (44.5x)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 8.8%"></div></div>
               </div>
               <div>
-                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (TPU v5e-1, B=32 Warm, sync=4)</span><span class="font-mono font-semibold">154.63 tok/s (48.8x)</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 95%"></div></div>
+                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> (T4 GPU `fp16`, B=32, n=2)</span><span class="font-mono font-semibold">381.72 tok/s (368.42–395.01)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 20.6%"></div></div>
               </div>
               <div>
-                <div class="flex justify-between"><span><code>StaticGemma4Engine</code> + <strong>L30–32 Bypass</strong> (TPU v5e-1, B=32)</span><span class="font-mono font-semibold">161.90 tok/s (51.1x)</span></div>
-                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 100%"></div></div>
+                <div class="flex justify-between"><span><code>vLLM 0.33.0</code> (T4 GPU `half` + `tile=16`, B=32, n=3)</span><span class="font-mono font-semibold">468.48 tok/s (461.88–471.97)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-[var(--primary)]" style="width: 25.3%"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between"><span>Pure JAX <code>JaxStaticGemma4Engine</code> (TPU B=32, n=2)</span><span class="font-mono font-semibold">1,780.83 tok/s (489.6x)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-emerald-500" style="width: 96.3%"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between"><span>Pure JAX + <strong>L30–32 Bypass</strong> (TPU B=32, n=2)</span><span class="font-mono font-semibold">1,849.66 tok/s (508.5x)</span></div>
+                <div class="w-full h-2 bg-[var(--card)] rounded overflow-hidden mt-0.5"><div class="h-full bg-emerald-400" style="width: 100%"></div></div>
               </div>
             </div>
           </div>
@@ -476,7 +484,7 @@ if layer_idx &lt; self.first_kv_shared:
           <details name="method-faq" class="acc-item bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
             <summary class="text-xs font-semibold text-[var(--foreground)]">How was Cross-VM Bit-Exact Determinism Verified?</summary>
             <p class="text-xs text-[var(--muted-foreground)] mt-2 leading-relaxed">
-              We ran `00_baseline` (`N=384`, `seed=2026`) on two completely independent free Colab Cloud TPU `v5e-1` VMs provisioned four days apart (`2026-11-03` vs. `2026-11-07`). Both VMs produced the exact same score down to every single benchmark: `overall = 63.54% (244/384)`, `GSM8K = 87.50% (84/96)`, `ARC-Challenge = 82.29% (79/96)`, `MMLU-Pro = 37.50% (36/96)`, and `MBPP = 46.88% (45/96)`.
+              We ran `00_baseline` (`N=384`, `seed=2026`) on two completely independent free Colab Cloud TPU `v5e-1` VMs provisioned in separate sessions. Both VMs produced the exact same score down to every single benchmark: `overall = 63.54% (244/384)`, `GSM8K = 87.50% (84/96)`, `ARC-Challenge = 82.29% (79/96)`, `MMLU-Pro = 37.50% (36/96)`, and `MBPP = 46.88% (45/96)`.
             </p>
           </details>
         </div>
@@ -706,7 +714,7 @@ if layer_idx &lt; self.first_kv_shared:
         { k: "Bypassed Layer(s)", v: "Layers 30, 31, 32 (-169.8M)", s: "3 Double-Wide MLPs skipped" },
         { k: "Grafted L29.layer_scalar", v: "0.8125 × 0.6284 = 0.5106", s: "Product λ_30 λ_31 λ_32 grafted" },
         { k: "MMLU-Pro STEM (Dev)", v: "50.0% (+15.6% vs Base!)", s: "+5 gains / -0 losses on 10-way MCQ" },
-        { k: "Peak Batch-32 Speed", v: "161.90 tok/s (51.1x)", s: "Fastest TPU configuration" }
+        { k: "Peak Batch-32 Speed", v: "161.90 tok/s (44.5x PT) / 1,849.66 tok/s (508.5x JAX)", s: "Fastest PyTorch / Pure JAX TPU configs" }
       ],
       s3ctrl: [
         { k: "Bypassed Layer(s)", v: "Layers 30, 31, 32 (Naive)", s: "No layer_scalar compensation" },
