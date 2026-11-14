@@ -2,7 +2,7 @@
 
 A repository of reproducible mechanistic interpretability experiments, zero-training weight surgeries, and hardware-accelerated static-graph inference engines for frontier language models on Cloud TPUs and GPUs.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Gemma4_Weight_Surgery_Reproducible_Colab.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Gemma4_Key_Takeaways_Colab.ipynb)
 [![TPU v5e Ready](https://img.shields.io/badge/TPU-v5e--1%20Ready-blue)](https://cloud.google.com/tpu)
 [![Model](https://img.shields.io/badge/Model-Gemma%204%20E2B--it-orange)](https://huggingface.co/google/gemma-4-E2B-it)
 [![Framework](https://img.shields.io/badge/Framework-PyTorch%20%7C%20JAX-red)](https://github.com/google/jax)
@@ -14,7 +14,8 @@ A repository of reproducible mechanistic interpretability experiments, zero-trai
 
 Mechanistic weight-space analysis and hardware-aware XLA compilation for Google DeepMind's **Gemma 4 E2B-it** (`google/gemma-4-E2B-it`, `unsloth/gemma-4-E2B-it`) on free Google Colab Cloud TPU `v5e-1` (`15.75 GiB` HBM, `0.00 CU/hr`).
 
-📓 **Interactive Colab Notebook (Weight Surgery)**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Gemma4_Weight_Surgery_Reproducible_Colab.ipynb) [`Gemma4_Weight_Surgery_Reproducible_Colab.ipynb`](gemma4_surgery/notebooks/Gemma4_Weight_Surgery_Reproducible_Colab.ipynb)  
+⚡ **Main Interactive Colab Notebook (Key Takeaways & Quickstart)**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Gemma4_Key_Takeaways_Colab.ipynb) [`Gemma4_Key_Takeaways_Colab.ipynb`](gemma4_surgery/notebooks/Gemma4_Key_Takeaways_Colab.ipynb)  
+📓 **Interactive Colab Notebook (Mechanistic Weight Surgery Deep Dive)**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Gemma4_Weight_Surgery_Reproducible_Colab.ipynb) [`Gemma4_Weight_Surgery_Reproducible_Colab.ipynb`](gemma4_surgery/notebooks/Gemma4_Weight_Surgery_Reproducible_Colab.ipynb)  
 📓 **Interactive Colab Notebook (Static-Graph KV Cache: PyTorch vs. JAX)**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Static_Graph_KV_Cache_Gemma4_TPU.ipynb) [`Static_Graph_KV_Cache_Gemma4_TPU_output.ipynb`](gemma4_surgery/notebooks/Static_Graph_KV_Cache_Gemma4_TPU_output.ipynb)  
 
 ---
@@ -140,12 +141,16 @@ LMExperiments/
     │   ├── phase1_anatomy_probe.py             # 35-layer activation & spectral MRI probe
     │   ├── analyze_exp4.py                     # Statistical significance & paired bootstrap analyzer
     │   ├── bench_sync4.py                      # Multi-step unrolling & barrier benchmark
-    │   └── check_tpu_env.py                    # TPU environment detection
+    │   ├── check_tpu_env.py                    # TPU environment detection
+    │   ├── build_colab_notebook.py             # Generator for reproducible surgery notebook
+    │   ├── build_static_kv_notebook.py         # Generator for static KV-cache notebook
+    │   └── build_takeaways_notebook.py         # Generator for streamlined key takeaways notebook
     ├── experiments/
     │   ├── exp3_dev_surgery_screen.py          # Exp 3 screening script (12 hypotheses)
     │   ├── exp3b_dev_refinement.py             # Exp 3b prose refinement script
     │   └── exp4_heldout_test_eval.py           # Exp 4 held-out test evaluation
     ├── notebooks/
+    │   ├── Gemma4_Key_Takeaways_Colab.ipynb        # Main streamlined takeaways & zero-recompile walkthrough notebook
     │   ├── Gemma4_Weight_Surgery_Reproducible_Colab.ipynb  # End-to-end reproducible Colab notebook
     │   ├── Static_Graph_KV_Cache_Gemma4_TPU.ipynb          # Static KV-cache walkthrough notebook
     │   └── Static_Graph_KV_Cache_Gemma4_TPU_output.ipynb   # Executed static KV-cache notebook with outputs
@@ -170,9 +175,9 @@ LMExperiments/
 ## Quickstart
 
 ### 1. Run in Google Colab (Free Cloud TPU `v5e-1` or T4 GPU)
-Click the badge below to run the end-to-end reproducible notebook directly in your browser with zero setup:
+Click the badge below to run the streamlined Key Takeaways notebook directly in your browser with zero setup:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Gemma4_Weight_Surgery_Reproducible_Colab.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/keshan/LMExperiments/blob/main/gemma4_surgery/notebooks/Gemma4_Key_Takeaways_Colab.ipynb)
 
 ### 2. Local Setup
 ```bash
